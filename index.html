@@ -144,6 +144,25 @@
           </div>
         </div>
 
+        <!-- Right rail: log + export -->
+        <aside class="console-right">
+          <p class="rail-label">EVENT LOG</p>
+          <div class="event-log" id="eventLog" aria-live="polite"></div>
+
+          <div class="score-box">
+            <p class="rail-label">TOP CONTACT</p>
+            <p class="score-val" id="topScore">—</p>
+            <p class="score-kind" id="topKind">awaiting sweep</p>
+          </div>
+
+          <div class="export-row">
+            <button class="btn btn-ghost btn-block" id="exportJson" type="button">Export report.json</button>
+            <button class="btn btn-ghost btn-block" id="exportCsv" type="button">Export contacts.csv</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
 
     
 </body>
