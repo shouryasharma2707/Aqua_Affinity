@@ -206,6 +206,29 @@
         </article>
       </div>
     </section>
+
+     <!-- Pipeline -->
+    <section class="pipeline" id="pipeline">
+      <header class="section-head">
+        <p class="section-kicker">03 — Under the hull</p>
+        <h2>Five stages, one duty cycle</h2>
+      </header>
+      <ol class="pipe-flow">
+        <li><span class="pipe-i">01</span><h3>Ingest</h3><p>XTF / SDF / tiled PNG log reader; ping headers parsed for lat, lon, range, altitude, towfish attitude.</p></li>
+        <li><span class="pipe-i">02</span><h3>Condition</h3><p>Slant-range correction, TVG gain, despeckle, heave-aware row interpolation for dropouts.</p></li>
+        <li><span class="pipe-i">03</span><h3>Detect</h3><p>Quantised YOLO-backbone head on 640&nbsp;px tiles with 15% overlap; INT8 on ARM, FP16 on GPU.</p></li>
+        <li><span class="pipe-i">04</span><h3>Score &amp; veto</h3><p>Calibrated confidence + shadow-geometry rule layer strips shadow-band FPs.</p></li>
+        <li><span class="pipe-i">05</span><h3>Report</h3><p>GeoJSON / CSV per contact: lat-lon, bounding dims, class, confidence, ping epoch.</p></li>
+      </ol>
+      <div class="pipeline-note">
+        <p>
+          The whole loop is a shared-library core with a thin web UI — the same
+          binary that draws this console can sit on an AUV's companion computer,
+          gated to <strong>&lt; 8 W</strong> during a survey line.
+        </p>
+      </div>
+    </section>
+
     
 </body>
 </html>
