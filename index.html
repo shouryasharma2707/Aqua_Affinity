@@ -121,6 +121,30 @@
           </p>
         </aside>
 
+        <!-- Center: waterfall -->
+        <div class="console-center">
+          <div class="viewport-head">
+            <span class="vp-tag" id="vpTag">SBS · 900 kHz · PORT+STBD</span>
+            <span class="vp-live"><span class="dot"></span> SCANNING</span>
+          </div>
+          <div class="viewport" id="viewport">
+            <canvas id="sonarCanvas"></canvas>
+            <canvas id="overlayCanvas" width="1024" height="614" aria-hidden="true"></canvas>
+            <div class="vp-hud" aria-hidden="true">
+              <span id="hudRange">RANGE 75 m/side</span>
+              <span id="hudLat">LAT 12°58.4′N</span>
+              <span id="hudLon">LON 080°14.9′E</span>
+            </div>
+          </div>
+          <div class="legend">
+            <span><i style="--c:#0b2f4a"></i> low backscatter</span>
+            <span><i style="--c:#7fd8d2"></i> mid</span>
+            <span><i style="--c:#f4f7ee"></i> strong return</span>
+            <span><i style="--c:var(--warn)"></i> candidate</span>
+          </div>
+        </div>
+
+
     
 </body>
 </html>
