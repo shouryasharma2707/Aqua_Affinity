@@ -89,7 +89,9 @@ const el = {
   boundsToggle: $("#boundsToggle"),
   rescan: $("#rescanBtn"),
   uploadBtn: $("#uploadBtn"), uploadInput: $("#uploadInput"),
-  viewport: $("#viewport"), overlay: $("#overlayCanvas"),
+  viewport: $("#viewport"),
+  viewportFrame: $(".viewport-frame"),
+  overlay: $("#overlayCanvas"),
   sonar: $("#sonarCanvas"),
   hudRange: $("#hudRange"),
   hudLat: $("#hudLat"),
@@ -101,6 +103,48 @@ const el = {
   exportJson: $("#exportJson"),
   exportCsv: $("#exportCsv"),
 };
+
+/* ---------------- scroll-spy nav highlighting ---------------- */
+
+function initScrollSpy() {
+  const links = Array.from(document.querySelectorAll(".site-nav a[href^='#']"));
+  if (!links.length || !("IntersectionObserver" in window)) return;
+
+  const map = new Map();
+  links.forEach((link) => {
+    const sec = document.querySelector(link.hash);
+    if (sec) map.set(sec, link);
+  });
+
+  const setActive = (link) =>
+    links.forEach((l) => l.classList.toggle("is-active", l === link));
+
+  const spy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) setActive(map.get(e.target));
+      });
+    },
+    // a section is "current" when its top edge crosses the upper third of the viewport
+    { rootMargin: "-15% 0px -55% 0px", threshold: 0 }
+  );
+  map.forEach((_, sec) => spy.observe(sec));
+}
+
+/* auto-center the sonar viewer after a new capture loads */
+
+function focusViewport() {
+  const target = el.viewportFrame || el.viewport;
+  if (!target) return;
+  const r = target.getBoundingClientRect();
+  const headerH = (document.querySelector(".site-head") || {}).offsetHeight || 0;
+  const delta = r.top + r.height / 2 - Math.max(window.innerHeight, headerH + 220) / 2;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  window.scrollTo({
+    top: Math.min(Math.max(window.scrollY + delta, 0), Math.max(max, 0)),
+    behavior: "smooth",
+  });
+}
 
 const state = {
   file: null,        // display name of the current capture
@@ -129,6 +173,10 @@ function updateSliderFill(input) {
 }
 
 async function scan() {
+  if (typeof SonarModel === "undefined") {
+    log("MODEL   runtime unavailable — running display-only", "warn");
+    return;
+  }
   if (scanBusy) { scanQueued = true; return; }
   scanBusy = true;
   try {
@@ -316,6 +364,7 @@ function loadCaptureImage(src, displayName, revoke) {
     el.captureChips.forEach((c) => c.classList.toggle("is-on", c.dataset.name === displayName));
     el.vpTag.textContent = `${displayName} · 900 kHz`;
     log(`FRAME   ${displayName} · ${img.naturalWidth}×${img.naturalHeight} loaded`);
+    focusViewport();
     scan();
   };
   img.onerror = () => {
@@ -345,7 +394,10 @@ function boot() {
   el.uploadBtn.addEventListener("click", () => el.uploadInput.click());
   el.uploadInput.addEventListener("change", () => {
     const f = el.uploadInput.files && el.uploadInput.files[0];
-    if (f) loadCaptureImage(URL.createObjectURL(f), `UPLOAD_${f.name.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 30)}`, true);
+    if (f) {
+      state.file = null;
+      loadCaptureImage(URL.createObjectURL(f), `UPLOAD_${f.name.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 30)}`, true);
+    }
     el.uploadInput.value = "";
   });
   el.captureChips.forEach((btn) =>
@@ -371,16 +423,22 @@ function boot() {
 
   // boot: model first, then load the default capture so the first sweep is real
   log("BOOT    sonarbeam core v0.9.2 · WASM runtime ready", "ok");
-  log("BOOT    fetching sonar_model_edge.onnx (U-Net · 74 KB)…");
-  SonarModel.load().then((ok) => {
-    if (ok) {
-      log("MODEL   sonar_model_edge.onnx ready · WASM EP", "ok");
-    } else {
-      log(`MODEL   unavailable — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
-    }
-    const first = el.captureChips[0];
+  const first = el.captureChips[0];
+  if (typeof SonarModel !== "undefined") {
+    log("BOOT    fetching sonar_model_edge.onnx (U-Net · 74 KB)…");
+    SonarModel.load().then((ok) => {
+      if (ok) {
+        log("MODEL   sonar_model_edge.onnx ready · WASM EP", "ok");
+      } else {
+        log(`MODEL   unavailable — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
+      }
+      if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false);
+    });
+  } else {
+    // no model.js / ORT runtime — still show the capture so the console reads live
+    log("MODEL   ONNX runtime not present — display-only sweep", "warn");
     if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false);
-  });
+  }
 
   // reveal-on-scroll
   const targets = document.querySelectorAll(
@@ -406,5 +464,9 @@ function boot() {
 boot();
 
 // exposed for console-based testing / verification
-window.__sb = { state, geotag, SonarModel };
+window.__sb = {
+  state,
+  geotag,
+  ...(typeof SonarModel !== "undefined" ? { SonarModel } : {}),
+};
 
