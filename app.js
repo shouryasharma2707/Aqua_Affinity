@@ -108,27 +108,43 @@ const el = {
 
 function initScrollSpy() {
   const links = Array.from(document.querySelectorAll(".site-nav a[href^='#']"));
-  if (!links.length || !("IntersectionObserver" in window)) return;
+  if (!links.length) return;
 
-  const map = new Map();
-  links.forEach((link) => {
-    const sec = document.querySelector(link.hash);
-    if (sec) map.set(sec, link);
-  });
+  const secs = links
+    .map((link) => ({ link, sec: document.querySelector(link.hash) }))
+    .filter((x) => x.sec);
+  if (!secs.length) return;
 
   const setActive = (link) =>
     links.forEach((l) => l.classList.toggle("is-active", l === link));
 
-  const spy = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) setActive(map.get(e.target));
-      });
-    },
-    // a section is "current" when its top edge crosses the upper third of the viewport
-    { rootMargin: "-15% 0px -55% 0px", threshold: 0 }
-  );
-  map.forEach((_, sec) => spy.observe(sec));
+  let last = 0;
+  const update = () => {
+    last = performance.now();
+    // "current" = last section whose top has crossed the upper quarter of the viewport
+    const line = window.innerHeight * 0.25;
+    let current = null;
+    for (const { link, sec } of secs) {
+      if (sec.getBoundingClientRect().top <= line) current = link;
+    }
+    // pinned to the last section when the page can't scroll any further
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      current = secs[secs.length - 1].link;
+    }
+    setActive(current);
+  };
+
+  // time-based throttle: robust during momentum scrolling and in embedded webviews
+  const onScroll = () => {
+    if (performance.now() - last > 80) update();
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  // anchor jumps (nav clicks, initial #hash loads) fire these synchronously
+  window.addEventListener("hashchange", update);
+  window.addEventListener("load", update);
+  update();
 }
 
 /* auto-center the sonar viewer after a new capture loads */
@@ -353,7 +369,7 @@ function exportCSV() {
 
 /*  capture loader (dataset presets / upload / drag-drop)  */
 
-function loadCaptureImage(src, displayName, revoke) {
+function loadCaptureImage(src, displayName, revoke, opts = {}) {
   const img = new Image();
   img.onload = () => {
     if (revoke) URL.revokeObjectURL(src);
@@ -364,7 +380,7 @@ function loadCaptureImage(src, displayName, revoke) {
     el.captureChips.forEach((c) => c.classList.toggle("is-on", c.dataset.name === displayName));
     el.vpTag.textContent = `${displayName} · 900 kHz`;
     log(`FRAME   ${displayName} · ${img.naturalWidth}×${img.naturalHeight} loaded`);
-    focusViewport();
+    if (opts.focus !== false) focusViewport(); // boot loads shouldn't yank the page
     scan();
   };
   img.onerror = () => {
@@ -378,6 +394,7 @@ function loadCaptureImage(src, displayName, revoke) {
 /* ---------------- boot ---------------- */
 
 function boot() {
+  initScrollSpy();
   updateSliderFill(el.confSlider);
 
   el.confSlider.addEventListener("input", () => {
@@ -432,17 +449,17 @@ function boot() {
       } else {
         log(`MODEL   unavailable — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
       }
-      if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false);
+      if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false, { focus: false });
     });
   } else {
     // no model.js / ORT runtime — still show the capture so the console reads live
     log("MODEL   ONNX runtime not present — display-only sweep", "warn");
-    if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false);
+    if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false, { focus: false });
   }
 
   // reveal-on-scroll
   const targets = document.querySelectorAll(
-    ".approach-card, .num-card, .pipe-flow li, .section-head",
+    ".approach-card, .num-card, .pipe-flow li, .section-head, .impact-card, .impact-stat",
   );
   if ("IntersectionObserver" in window) {
     targets.forEach((t) => t.classList.add("reveal"));
