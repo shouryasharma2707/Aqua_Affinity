@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aqua Affinity: Ghost gear detection for Side-Scan sonar</title>
     <meta name="description" content="SONARBEAM turns raw side-scan sonar logs into geotagged marine-debris reports. On-device detection of ghost nets, wrecks and pipes — built for AUVs and towed fish, no cloud required." />
-  <meta name="theme-color" content="#04121d" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304121d'/%3E%3Cpath d='M8 32h14l6-16 8 32 6-16h14' stroke='%2339f0c8' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#f2f6f1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f6f63'/%3E%3Cpath d='M8 32h14l6-16 8 32 6-16h14' stroke='%23f4faf7' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="SONARBEAM — Ghost Gear Detection for Side-Scan Sonar" />
   <meta property="og:description" content="Detect ghost nets, wrecks and pipes in acoustic imagery. Confidence-scored, geotagged, edge-ready." />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600&display=swap" />
   <link rel="stylesheet" href="styles.css" />
   <script type="application/ld+json">
   {
@@ -38,6 +39,7 @@
       <a href="#approach">Approach</a>
       <a href="#pipeline">Pipeline</a>
       <a href="#numbers">Benchmarks</a>
+      <a href="#impact">Impact</a>
     </nav>
     <a class="head-cta" href="#console">Open the console</a>
   </header>
@@ -84,82 +86,96 @@
 
       <div class="console-shell" role="group" aria-label="Sonar analysis console">
 
-        <!-- Left rail: controls -->
-        <aside class="console-left">          <p class="rail-label">TUNING</p>
-          <label class="slider">
-            <span>Confidence gate <output id="confOut">75</output>%</span>
-            <input id="confSlider" type="range" min="30" max="95" value="75" step="5" />
-          </label>
-          <label class="check">
-            <input id="boundsToggle" type="checkbox" checked />
-            <span class="checkbox-ui" aria-hidden="true"></span>
-            Show detection overlays
-          </label>
-
-          <p class="rail-label">CAPTURE</p>
-          <div class="btn-grid" role="group" aria-label="Dataset captures">
+        <!-- Row 1 — capture & tuning, above the viewer -->
+        <div class="console-top">
+          <div class="panel console-panel console-panel-capture">
+            <p class="rail-label">CAPTURE</p>
+            <div class="btn-grid" role="group" aria-label="Dataset captures">
             <button class="chip is-on" data-real="sih-sonar-debris/data/raw/000008_jpg.rf.9fcda58b0c5acab328c191a8bd4ebd7d.jpg" data-name="SBS_000008_DSET.xtf" type="button">Dataset · 000008</button>
             <button class="chip" data-real="sih-sonar-debris/data/raw/000010_jpg.rf.efb6cf8c3257d078e4fffc1451283b5b.jpg" data-name="SBS_000010_DSET.xtf" type="button">Dataset · 000010</button>
             <button class="chip" data-real="sih-sonar-debris/data/raw/000132_jpg.rf.f2ba423ba22a7c3e4d7700d635aab568.jpg" data-name="SBS_000132_DSET.xtf" type="button">Dataset · 000132</button>
             <button class="chip" data-real="sih-sonar-debris/data/raw/000227_jpg.rf.41d22509c106693d9d28e1a98e9792cd.jpg" data-name="SBS_000227_DSET.xtf" type="button">Dataset · 000227</button>
+            </div>
+            <div class="upload-row">
+              <button id="uploadBtn" class="btn btn-solid" type="button">Upload sonar image</button>
+              <input id="uploadInput" type="file" accept="image/*" hidden />
+              <button id="rescanBtn" class="btn btn-ghost" type="button">Re-run inference</button>
+            </div>
+            <p class="upload-hint">JPG / PNG · drag it straight onto the scan · runs entirely in this browser</p>
           </div>
-          <button id="uploadBtn" class="btn btn-ghost btn-block" type="button">
-            Upload sonar image
-          </button>
-          <input id="uploadInput" type="file" accept="image/*" hidden />
 
-          <button id="rescanBtn" class="btn btn-solid btn-block" type="button">
-            Re-run inference
-          </button>
+          <div class="panel console-panel console-panel-tuning">
+            <p class="rail-label">TUNING</p>
+            <label class="slider">
+              <span>Confidence gate <output id="confOut">75</output>%</span>
+              <input id="confSlider" type="range" min="30" max="95" value="75" step="5" />
+            </label>
+            <label class="check">
+              <input id="boundsToggle" type="checkbox" checked />
+              <span class="checkbox-ui" aria-hidden="true"></span>
+              Show detection overlays
+            </label>
+            <p class="rail-note">
+              Overlay boxes carry a 0–100% confidence from the scoring module, which
+              vetoes candidates sitting on shadow-gradient or ripple-specular bands.
+              Contact labels (drum, wreck, net, pipe) describe blob geometry —
+              the U-Net segments debris as a single class and the naming layer
+              classifies shape, so treat labels as indicative, not identified.
+            </p>
+          </div>
+        </div>
 
-          <p class="rail-note">
-            Overlay boxes carry a 0–100% confidence from the scoring module, which
-            vetoes candidates sitting on shadow-gradient or ripple-specular bands.
-            Contact labels (drum, wreck, net, pipe) describe blob geometry —
-            the U-Net segments debris as a single class and the naming layer
-            classifies shape, so treat labels as indicative, not identified.
-          </p>
-        </aside>
-
-        <!-- Center: waterfall -->
-        <div class="console-center">
+        <!-- Row 2 — waterfall viewer + readouts -->
+        <div class="console-main">
+          <!-- Center: waterfall -->
+          <div class="console-center">
           <div class="viewport-head">
             <span class="vp-tag" id="vpTag">SBS · 900 kHz · PORT+STBD</span>
             <span class="vp-live"><span class="dot"></span> SCANNING</span>
           </div>
-          <div class="viewport" id="viewport">
-            <canvas id="sonarCanvas"></canvas>
-            <canvas id="overlayCanvas" width="1024" height="614" aria-hidden="true"></canvas>
-            <div class="vp-hud" aria-hidden="true">
-              <span id="hudRange">RANGE 75 m/side</span>
-              <span id="hudLat">LAT 12°58.4′N</span>
-              <span id="hudLon">LON 080°14.9′E</span>
+          <div class="viewport-frame">
+            <div class="viewport" id="viewport">
+              <canvas id="sonarCanvas"></canvas>
+              <canvas id="overlayCanvas" width="1024" height="614" aria-hidden="true"></canvas>
+              <div class="vp-hud" aria-hidden="true">
+                <span id="hudRange">RANGE 75 m/side</span>
+                <span id="hudLat">LAT 12°58.4′N</span>
+                <span id="hudLon">LON 080°14.9′E</span>
+              </div>
             </div>
           </div>
           <div class="legend">
             <span><i style="--c:#0b2f4a"></i> low backscatter</span>
             <span><i style="--c:#7fd8d2"></i> mid</span>
             <span><i style="--c:#f4f7ee"></i> strong return</span>
-            <span><i style="--c:var(--warn)"></i> candidate</span>
+            <span><i style="--c:#b0413e"></i> candidate</span>
           </div>
         </div>
 
-        <!-- Right rail: log + export -->
-        <aside class="console-right">
-          <p class="rail-label">EVENT LOG</p>
-          <div class="event-log" id="eventLog" aria-live="polite"></div>
+          <!-- Side rail: log + readout -->
+          <aside class="panel console-side">
+            <p class="rail-label">EVENT LOG</p>
+            <div class="event-log" id="eventLog" aria-live="polite"></div>
 
-          <div class="score-box">
-            <p class="rail-label">TOP CONTACT</p>
-            <p class="score-val" id="topScore">—</p>
-            <p class="score-kind" id="topKind">awaiting sweep</p>
-          </div>
+            <div class="score-box">
+              <p class="rail-label">TOP CONTACT</p>
+              <p class="score-val" id="topScore">—</p>
+              <p class="score-kind" id="topKind">awaiting sweep</p>
+            </div>
+          </aside>
+        </div>
 
+        <!-- Row 3 — exports at the bottom of the console -->
+        <div class="panel console-foot">
+          <p class="rail-note">
+            Reports are generated from the last completed sweep — every contact
+            below the gate is held back, and vetoed candidates never reach the file.
+          </p>
           <div class="export-row">
-            <button class="btn btn-ghost btn-block" id="exportJson" type="button">Export report.json</button>
-            <button class="btn btn-ghost btn-block" id="exportCsv" type="button">Export contacts.csv</button>
+            <button class="btn btn-ghost" id="exportJson" type="button">Export report.json</button>
+            <button class="btn btn-ghost" id="exportCsv" type="button">Export contacts.csv</button>
           </div>
-        </aside>
+        </div>
       </div>
     </section>
 
