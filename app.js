@@ -77,3 +77,71 @@ function drawOverlay(canvas, contacts, gate, sceneKey) {
     ctx.fillText(label, x + 3, ly + 1);
   }
 }
+
+
+/*  console wiring  */const $ = (s) => document.querySelector(s);
+
+const el = {
+  captureChips: document.querySelectorAll("[data-real]"),
+  confSlider: $("#confSlider"),
+  confOut: $("#confOut"),
+
+  boundsToggle: $("#boundsToggle"),
+  rescan: $("#rescanBtn"),
+  uploadBtn: $("#uploadBtn"), uploadInput: $("#uploadInput"),
+  viewport: $("#viewport"), overlay: $("#overlayCanvas"),
+  sonar: $("#sonarCanvas"),
+  hudRange: $("#hudRange"),
+  hudLat: $("#hudLat"),
+  hudLon: $("#hudLon"),
+  vpTag: $("#vpTag"),
+  log: $("#eventLog"),
+  topScore: $("#topScore"),
+  topKind: $("#topKind"),
+  exportJson: $("#exportJson"),
+  exportCsv: $("#exportCsv"),
+};
+
+const state = {
+  file: null,        // display name of the current capture
+  result: { contacts: [], vetoed: 0 },
+};
+let scanBusy = false, scanQueued = false;
+
+const stamp = () => {
+  const d = new Date();
+  const p = (n, l = 2) => String(n).padStart(l, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(Math.floor(d.getMilliseconds() / 10))}`;
+};
+
+function log(msg, cls = "") {
+  const line = document.createElement("p");
+  line.className = `log-line ${cls}`;
+  line.innerHTML = `<span class="t">${stamp()}</span>  <span class="msg">${msg}</span>`;
+  el.log.appendChild(line);
+  while (el.log.children.length > 60) el.log.removeChild(el.log.firstChild);
+  el.log.scrollTop = el.log.scrollHeight;
+}
+
+function updateSliderFill(input) {
+  const pct = ((input.value - input.min) / (input.max - input.min)) * 100;
+  input.style.setProperty("--fill", pct + "%");
+}
+
+async function scan() {
+  if (scanBusy) { scanQueued = true; return; }
+  scanBusy = true;
+  try {
+    await doScan();
+  } finally {
+    scanBusy = false;
+    if (scanQueued) { scanQueued = false; scan(); }
+  }
+}
+
+async function doScan() {
+  if (!state.file) return; // no capture loaded yet
+  log(`INGEST  ${state.file} · 900 kHz · ping 0448`);
+
+  log("COND    slant-range corr · TVG · SRAD despeckle", "ok");
+
