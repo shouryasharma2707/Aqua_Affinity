@@ -325,3 +325,86 @@ function loadCaptureImage(src, displayName, revoke) {
   img.src = src;
 }
 
+
+/* ---------------- boot ---------------- */
+
+function boot() {
+  updateSliderFill(el.confSlider);
+
+  el.confSlider.addEventListener("input", () => {
+    el.confOut.textContent = el.confSlider.value;
+    updateSliderFill(el.confSlider);
+  });
+  el.confSlider.addEventListener("change", () => scan());
+
+  el.boundsToggle.addEventListener("change", () => {
+    el.overlay.style.display = el.boundsToggle.checked ? "" : "none";
+  });
+
+  // dataset captures + upload + drag-drop onto the viewport
+  el.uploadBtn.addEventListener("click", () => el.uploadInput.click());
+  el.uploadInput.addEventListener("change", () => {
+    const f = el.uploadInput.files && el.uploadInput.files[0];
+    if (f) loadCaptureImage(URL.createObjectURL(f), `UPLOAD_${f.name.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 30)}`, true);
+    el.uploadInput.value = "";
+  });
+  el.captureChips.forEach((btn) =>
+    btn.addEventListener("click", () => loadCaptureImage(btn.dataset.real, btn.dataset.name, false))
+  );
+  el.viewport.addEventListener("dragover", (e) => { e.preventDefault(); el.viewport.classList.add("is-drop"); });
+  el.viewport.addEventListener("dragleave", () => el.viewport.classList.remove("is-drop"));
+  el.viewport.addEventListener("drop", (e) => {
+    e.preventDefault();
+    el.viewport.classList.remove("is-drop");
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && /^image\//.test(f.type)) {
+      loadCaptureImage(URL.createObjectURL(f), `UPLOAD_${f.name.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 30)}`, true);
+    } else if (f) {
+      log("FRAME   only image files can be shown here", "warn");
+    }
+  });
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => e.preventDefault());
+  el.rescan.addEventListener("click", scan);
+  el.exportJson.addEventListener("click", exportJSON);
+  el.exportCsv.addEventListener("click", exportCSV);
+
+  // boot: model first, then load the default capture so the first sweep is real
+  log("BOOT    sonarbeam core v0.9.2 · WASM runtime ready", "ok");
+  log("BOOT    fetching sonar_model_edge.onnx (U-Net · 74 KB)…");
+  SonarModel.load().then((ok) => {
+    if (ok) {
+      log("MODEL   sonar_model_edge.onnx ready · WASM EP", "ok");
+    } else {
+      log(`MODEL   unavailable — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
+    }
+    const first = el.captureChips[0];
+    if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false);
+  });
+
+  // reveal-on-scroll
+  const targets = document.querySelectorAll(
+    ".approach-card, .num-card, .pipe-flow li, .section-head",
+  );
+  if ("IntersectionObserver" in window) {
+    targets.forEach((t) => t.classList.add("reveal"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 },
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+}
+
+boot();
+
+// exposed for console-based testing / verification
+window.__sb = { state, geotag, SonarModel };
+
