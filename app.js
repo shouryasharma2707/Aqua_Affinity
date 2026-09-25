@@ -301,3 +301,27 @@ function exportCSV() {
     "ok",
   );
 }
+
+
+/*  capture loader (dataset presets / upload / drag-drop)  */
+
+function loadCaptureImage(src, displayName, revoke) {
+  const img = new Image();
+  img.onload = () => {
+    if (revoke) URL.revokeObjectURL(src);
+    el.sonar.width = SW; el.sonar.height = SH;
+    // stretch to fill — the same warp preprocess.py applies when it resizes
+    el.sonar.getContext("2d", { willReadFrequently: true }).drawImage(img, 0, 0, SW, SH);
+    state.file = displayName;
+    el.captureChips.forEach((c) => c.classList.toggle("is-on", c.dataset.name === displayName));
+    el.vpTag.textContent = `${displayName} · 900 kHz`;
+    log(`FRAME   ${displayName} · ${img.naturalWidth}×${img.naturalHeight} loaded`);
+    scan();
+  };
+  img.onerror = () => {
+    if (revoke) URL.revokeObjectURL(src);
+    log("FRAME   could not decode that image", "warn");
+  };
+  img.src = src;
+}
+
