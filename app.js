@@ -145,3 +145,159 @@ async function doScan() {
 
   log("COND    slant-range corr · TVG · SRAD despeckle", "ok");
 
+// --- inference: ONNX U-Net, the only detection path ---
+  const gate = +el.confSlider.value;
+  const t0 = performance.now();
+  let result = null;
+  const ready = await Promise.race([
+    SonarModel.load(),
+    new Promise((r) => setTimeout(() => r(false), 8000)),
+  ]);
+  if (ready) {
+    try {
+      result = await SonarModel.infer(el.sonar, gate);
+    } catch (err) {
+      log(`MODEL   inference failed — ${String((err && err.message) || err).slice(0, 56)}`, "warn");
+    }
+  } else if (SonarModel.status === "error") {
+    log(`MODEL   load failed — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
+  } else {
+    log("MODEL   runtime still loading — retry the sweep", "warn");
+  }
+  if (!result) {
+    drawOverlay(el.overlay, [], gate);
+    return;
+  }
+
+  const dt = (performance.now() - t0).toFixed(0);
+  state.result = result;
+  const n = result.contacts.length;
+
+  log(
+    `INFER   U-Net ONNX · ${n} contact${n === 1 ? "" : "s"} ≥ ${gate}% · ${dt} ms e2e`,
+    "ok",
+  );
+
+  if (result.vetoed)
+    log(
+      `VETO    ${result.vetoed} candidate${result.vetoed > 1 ? "s" : ""} suppressed by scoring rules`,
+      "warn",
+    );
+
+  for (const c of state.result.contacts) {
+    const g = geotag(c);
+    log(
+      `CONTACT ${c.cls.padEnd(6)} ${String(c.conf).padStart(2)}% · ${g.lat} ${g.lon}`,
+      "hit",
+    );
+  }
+  if (!n) log("SWEEP   no contacts above gate — seafloor nominal", "ok");
+
+  log(
+    `REPORT  GeoJSON ready · ${n} contact${n === 1 ? "" : "s"} ≥ ${gate}%`,
+    "ok",
+  );
+
+  drawOverlay(el.overlay, state.result.contacts, gate);
+  el.overlay.style.display = el.boundsToggle.checked ? "" : "none";
+
+  // top contact readout
+  const best = state.result.contacts.reduce(
+    (a, b) => (!a || b.conf > a.conf ? b : a),
+    null,
+  );
+  if (best) {
+    el.topScore.textContent = `${best.conf}%`;
+    el.topKind.textContent = `${best.cls} · ${best.len} × ${best.wid} m`;
+    el.topScore.style.color = CLASS_COLOR[best.cls] || "var(--phos)";
+  } else {
+    el.topScore.textContent = "—";
+    el.topKind.textContent = "nothing above gate";
+    el.topScore.style.color = "";
+  }
+
+  const c0 = state.result.contacts[0];
+  if (c0) {
+    const g = geotag(c0);
+    el.hudLat.textContent = `LAT ${g.lat}`;
+    el.hudLon.textContent = `LON ${g.lon}`;
+  } else {
+    el.hudLat.textContent = "LAT 12°58.40′N";
+    el.hudLon.textContent = "LON 080°14.90′E";
+  }
+  el.vpTag.textContent = `${state.file} · 900 kHz`;
+}
+
+function download(name, mime, text) {
+  const blob = new Blob([text], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+function exportJSON() {
+  const n = state.result.contacts.length;
+  if (!n) {
+    log("EXPORT  nothing to export — raise the evidence first", "warn");
+    return;
+  }
+  const payload = {
+    meta: {
+      generator: "SONARBEAM demo console",
+      file: state.file || "unknown",
+      engine: "onnx-unet (sonar_model_edge.onnx)",
+      frequency_kHz: 900,
+      confidence_gate: +el.confSlider.value,
+      generated: new Date().toISOString(),
+      coordinate_frame: "WGS84 (demo geotag)",
+    },
+    contacts: state.result.contacts.map((c) => {
+      const g = geotag(c);
+      return {
+        id: c.id,
+        class: c.cls,
+        confidence_pct: c.conf,
+        latitude: g.lat,
+        longitude: g.lon,
+        bounding_box: {
+          u: +c.u.toFixed(3),
+          v: +c.v.toFixed(3),
+          w: +c.w.toFixed(3),
+          h: +c.h.toFixed(3),
+        },
+        dims_m: { length: c.len, width: c.wid },
+      };
+    }),
+  };
+  download(
+    "sonarbeam_contacts.json",
+    "application/json",
+    JSON.stringify(payload, null, 2),
+  );
+  log(
+    `EXPORT  sonarbeam_contacts.json · ${n} contact${n === 1 ? "" : "s"}`,
+    "ok",
+  );
+}
+
+function exportCSV() {
+  const n = state.result.contacts.length;
+  if (!n) {
+    log("EXPORT  nothing to export — raise the evidence first", "warn");
+    return;
+  }
+  const rows = ["id,class,confidence_pct,latitude,longitude,length_m,width_m"];
+  for (const c of state.result.contacts) {
+    const g = geotag(c);
+    rows.push(`${c.id},${c.cls},${c.conf},${g.lat},${g.lon},${c.len},${c.wid}`);
+  }
+  download("sonarbeam_contacts.csv", "text/csv", rows.join("\n"));
+  log(
+    `EXPORT  sonarbeam_contacts.csv · ${n} contact${n === 1 ? "" : "s"}`,
+    "ok",
+  );
+}
