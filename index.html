@@ -164,6 +164,48 @@
     </section>
 
 
+     <!-- Approach -->
+    <section class="approach" id="approach">
+      <header class="section-head">
+        <p class="section-kicker">02 — The hard part</p>
+        <h2>Rock, shadow, or wreck?</h2>
+        <p class="section-sub">
+          A boulder casts an acoustic shadow. So does a net drum. Naive detectors
+          light up on both. We attack the ambiguity in three passes.
+        </p>
+      </header>
+
+      <div class="approach-grid">
+        <article class="approach-card">
+          <span class="approach-num">A</span>
+          <h3>Despeckle, don't blur</h3>
+          <p>
+            Speckle in sonar is multiplicative, not Gaussian. A SRAD-style
+            anisotropic pass flattens noise inside regions while clamping edges —
+            so the shadow boundary that later fools lesser filters survives intact.
+          </p>
+        </article>
+        <article class="approach-card">
+          <span class="approach-num">B</span>
+          <h3>Shadow ↔ object geometry</h3>
+          <p>
+            Man-made bodies stand proud of the bed: their highlight and shadow
+            lobes face opposite channels and their aspect ratio stays coherent
+            across yaw. Ripple fields and ridge lines fail that consistency check.
+          </p>
+        </article>
+        <article class="approach-card">
+          <span class="approach-num">C</span>
+          <h3>Confidence, then veto</h3>
+          <p>
+            Every candidate gets a calibrated 0–100% score from backscatter
+            contrast, shadow length and texture entropy — then a rule layer vetoes
+            contacts that sit on gradient-shadow bands. False positives drop
+            without touching recall.
+          </p>
+        </article>
+      </div>
+    </section>
     
 </body>
 </html>
