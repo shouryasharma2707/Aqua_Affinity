@@ -246,6 +246,32 @@
         <div class="num-card"><span class="num-big">38<i>ms</i></span><span class="num-cap">p95 latency / 640px tile, CPU INT8</span></div>
       </div>
     </section>
+
+    <!-- ================= CTA ================= -->
+    <section class="closing">
+      <div class="closing-inner">
+        <p class="hero-kicker">READY WHEN THE FISH IS TOWED</p>
+        <h2>Point us at a sonar log.</h2>
+        <p>
+          Drop an XTF or a tiled export into the console and walk away with a
+          geotagged hazard report before the vessel completes its next line.
+        </p>
+        <a class="btn btn-solid" href="#console">Back to the console</a>
+      </div>
+      <div class="closing-rule" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p>
+      <span class="brand-mark" aria-hidden="true"></span>
+      SONARBEAM — marine debris intelligence · demo build · dataset imagery shown
+    </p>      <p class="foot-fine">Sonar captures run through the U-Net ONNX model locally in your browser. The model segments debris as one class; contact labels describe blob shape. No cloud. No telemetry. No fish were harmed.</p>
+  </footer>
+
+  <script src="vendor/ort.all.min.js" defer></script>
+  <script src="model.js" defer></script>
+  <script src="app.js" defer></script>
     
 </body>
 </html>
