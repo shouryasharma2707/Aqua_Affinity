@@ -72,6 +72,55 @@
         <span class="dot"></span><span id="heroStatus">U-NET ONNX · IN-BROWSER INFERENCE</span>
       </div>
     </section>
+
+    <!-- Console -->
+    <section class="console-section" id="console">
+      <header class="section-head">
+        <p class="section-kicker">01 — The working prototype</p>
+        <h2>Not a mockup. A console.</h2>
+        <p class="section-sub">          This front end runs the U-Net ONNX model from the ML pipeline directly in your browser — upload a sonar image or pull in a dataset capture and the full loop (ingest, detect, score, geotag, export) happens with zero cloud calls.
+        </p>
+      </header>
+
+      <div class="console-shell" role="group" aria-label="Sonar analysis console">
+
+        <!-- Left rail: controls -->
+        <aside class="console-left">          <p class="rail-label">TUNING</p>
+          <label class="slider">
+            <span>Confidence gate <output id="confOut">75</output>%</span>
+            <input id="confSlider" type="range" min="30" max="95" value="75" step="5" />
+          </label>
+          <label class="check">
+            <input id="boundsToggle" type="checkbox" checked />
+            <span class="checkbox-ui" aria-hidden="true"></span>
+            Show detection overlays
+          </label>
+
+          <p class="rail-label">CAPTURE</p>
+          <div class="btn-grid" role="group" aria-label="Dataset captures">
+            <button class="chip is-on" data-real="sih-sonar-debris/data/raw/000008_jpg.rf.9fcda58b0c5acab328c191a8bd4ebd7d.jpg" data-name="SBS_000008_DSET.xtf" type="button">Dataset · 000008</button>
+            <button class="chip" data-real="sih-sonar-debris/data/raw/000010_jpg.rf.efb6cf8c3257d078e4fffc1451283b5b.jpg" data-name="SBS_000010_DSET.xtf" type="button">Dataset · 000010</button>
+            <button class="chip" data-real="sih-sonar-debris/data/raw/000132_jpg.rf.f2ba423ba22a7c3e4d7700d635aab568.jpg" data-name="SBS_000132_DSET.xtf" type="button">Dataset · 000132</button>
+            <button class="chip" data-real="sih-sonar-debris/data/raw/000227_jpg.rf.41d22509c106693d9d28e1a98e9792cd.jpg" data-name="SBS_000227_DSET.xtf" type="button">Dataset · 000227</button>
+          </div>
+          <button id="uploadBtn" class="btn btn-ghost btn-block" type="button">
+            Upload sonar image
+          </button>
+          <input id="uploadInput" type="file" accept="image/*" hidden />
+
+          <button id="rescanBtn" class="btn btn-solid btn-block" type="button">
+            Re-run inference
+          </button>
+
+          <p class="rail-note">
+            Overlay boxes carry a 0–100% confidence from the scoring module, which
+            vetoes candidates sitting on shadow-gradient or ripple-specular bands.
+            Contact labels (drum, wreck, net, pipe) describe blob geometry —
+            the U-Net segments debris as a single class and the naming layer
+            classifies shape, so treat labels as indicative, not identified.
+          </p>
+        </aside>
+
     
 </body>
 </html>
