@@ -91,10 +91,10 @@
           <div class="panel console-panel console-panel-capture">
             <p class="rail-label">CAPTURE</p>
             <div class="btn-grid" role="group" aria-label="Dataset captures">
-            <button class="chip is-on" data-real="sih-sonar-debris/data/raw/000008_jpg.rf.9fcda58b0c5acab328c191a8bd4ebd7d.jpg" data-name="SBS_000008_DSET.xtf" type="button">Dataset · 000008</button>
-            <button class="chip" data-real="sih-sonar-debris/data/raw/000010_jpg.rf.efb6cf8c3257d078e4fffc1451283b5b.jpg" data-name="SBS_000010_DSET.xtf" type="button">Dataset · 000010</button>
-            <button class="chip" data-real="sih-sonar-debris/data/raw/000132_jpg.rf.f2ba423ba22a7c3e4d7700d635aab568.jpg" data-name="SBS_000132_DSET.xtf" type="button">Dataset · 000132</button>
-            <button class="chip" data-real="sih-sonar-debris/data/raw/000227_jpg.rf.41d22509c106693d9d28e1a98e9792cd.jpg" data-name="SBS_000227_DSET.xtf" type="button">Dataset · 000227</button>
+            <button class="chip is-on" data-real="sih-sonar-debris/sih-sonar-debris/data/raw/000008_jpg.rf.9fcda58b0c5acab328c191a8bd4ebd7d.jpg" data-name="SBS_000008_DSET.xtf" type="button">Dataset · 000008</button>
+            <button class="chip" data-real="sih-sonar-debris/sih-sonar-debris/data/raw/000010_jpg.rf.efb6cf8c3257d078e4fffc1451283b5b.jpg" data-name="SBS_000010_DSET.xtf" type="button">Dataset · 000010</button>
+            <button class="chip" data-real="sih-sonar-debris/sih-sonar-debris/data/raw/000132_jpg.rf.f2ba423ba22a7c3e4d7700d635aab568.jpg" data-name="SBS_000132_DSET.xtf" type="button">Dataset · 000132</button>
+            <button class="chip" data-real="sih-sonar-debris/sih-sonar-debris/data/raw/000227_jpg.rf.41d22509c106693d9d28e1a98e9792cd.jpg" data-name="SBS_000227_DSET.xtf" type="button">Dataset · 000227</button>
             </div>
             <div class="upload-row">
               <button id="uploadBtn" class="btn btn-solid" type="button">Upload sonar image</button>
@@ -107,8 +107,8 @@
           <div class="panel console-panel console-panel-tuning">
             <p class="rail-label">TUNING</p>
             <label class="slider">
-              <span>Confidence gate <output id="confOut">75</output>%</span>
-              <input id="confSlider" type="range" min="30" max="95" value="75" step="5" />
+              <span>Confidence gate <output id="confOut">50</output>%</span>
+              <input id="confSlider" type="range" min="30" max="95" value="50" step="5" />
             </label>
             <label class="check">
               <input id="boundsToggle" type="checkbox" checked />
@@ -380,7 +380,7 @@
     </p>      <p class="foot-fine">Sonar captures run through the U-Net ONNX model locally in your browser. The model segments debris as one class; contact labels describe blob shape. No cloud. No telemetry. No fish were harmed.</p>
   </footer>
 
-  <script src="vendor/ort.all.min.js" defer></script>
+  <!-- model.js self-contains ONNX Runtime Web + the trained U-Net (base64) -->
   <script src="model.js" defer></script>
   <script src="app.js" defer></script>
     
