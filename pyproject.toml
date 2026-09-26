@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint=".\sih-sonar-debris\sih-sonar-debris\preprocessing"
