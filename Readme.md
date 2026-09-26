@@ -1,75 +1,149 @@
 # AQUA AFFINITY
 
-**Ghost gear detection for side-scan sonar.** A self-contained demo website that turns
-side-scan sonar imagery into confidence-scored, geotagged marine-debris contacts —
-with the full detection loop (ingest → condition → detect → score → report) running
-**entirely in your browser**. No cloud. No telemetry.
+### Side-scan sonar anomaly detection
 
-The site pairs a polished landing page with a working analysis console backed by the
-team's [U-Net ONNX model](sih-sonar-debris/)
+AQUA AFFINITY is a browser-based prototype for finding suspicious objects and possible marine debris in side-scan sonar imagery.
+
+The current system takes a **JPG or PNG sonar image**, runs the detection model, and places the detected regions back onto the image. The longer-term goal is to move from simply detecting an anomaly to **classifying what that anomaly actually is**.
 
 ---
 
-## ✨ What's on the page
+## What it looks like
 
-| Section | Description |
-|---|---|
-| **Hero** | Project pitch and headline figures (≈38 ms p95/tile, <2.1% FPR, GeoJSON export) |
-| **Console** | The live prototype: load a capture, run real U-Net inference, inspect contacts, export reports |
-| **Approach** | How the detector separates wrecks from rocks — despeckling, shadow↔object geometry, confidence veto |
-| **Pipeline** | The five-stage edge pipeline (ingest, condition, detect, score & veto, report) |
-| **Benchmarks** | Stated evaluation numbers on hand-verified sonar tiles |
+### Landing page
 
-## 🖥️ The console (the fun part)
+The site starts by explaining the problem instead of immediately throwing a model at the visitor. The focus is abandoned and lost fishing gear, with the main idea that sonar can help locate objects that are difficult to see from the surface.
 
-The console in `index.html` is **not a mockup** — it runs the same ONNX model the
-Python pipeline exports, via [ONNX Runtime Web](https://onnxruntime.ai/) (WASM execution provider):
-
-- **Capture sources** — four dataset presets from `sih-sonar-debris/data/raw/`, local
-  file upload, or drag-and-drop any image onto the viewport.
-- **Tuning** — confidence gate slider (30–95%) and overlay toggle, with instant re-inference.
-- **Detection** — grayscale → CLAHE enhancement → 256×256 U-Net inference → threshold →
-  connected-component blobs → mean-probability + rule-based confidence scoring.
-  Blob geometry drives indicative labels (drum / net / pipe / wreck).
-- **Event log** — timestamped console output mirroring the edge pipeline's stages.
-- **Export** — download contacts as **GeoJSON** (`aquaaffinity_contacts.json`) or
-  **CSV** (`aquaffinity_contacts.csv`) with lat/lon, confidence, bounding box and
-  estimated dimensions.
-- **Deterministic geotag** — ping headers aren't in the dataset, so coordinates are
-  derived from contact position on a fixed survey-line origin (Gulf of Mannar block).
-  Same input frame → same coordinates.
-
-`model.js` mirrors the Python pipeline 1:1 so browser and offline results stay
-comparable (`preprocessing/preprocess.py` ↔ `clahe()`, `model/predict.py` ↔ threshold +
-blobs, `confidence_scoring/filter.py` ↔ rule scoring).
+![AQUA AFFINITY landing page](docs/screenshots/01-home.png)
 
 ---
 
-## 🚀 Run it locally
+## The console
 
-It's a fully static site — no build step, no package install. Any static file server works:
+The console is the working part of the prototype.
 
-```bash
-# from the repo root — pick one:
-python -m http.server 8000
-npx serve .
-```
+You can:
 
-Then open <http://localhost:8000>.
+- choose a demo capture
+- upload a JPG/PNG sonar image
+- re-run inference
+- change the confidence threshold
+- toggle detection overlays
+- inspect the event log
+- view the top detected contact
+- export contact/report data
 
-> **Use an HTTP server, not `file://`.** The WASM runtime, its ES-module glue, and the
-> ONNX model are all fetched at runtime, which browsers block on `file://`.
+![AQUA AFFINITY console](docs/screenshots/02-console-top.png)
 
+The detection output is shown directly on the sonar image rather than hidden behind a separate results page.
 
-## 🧠 The model
+![Sonar detection results](docs/screenshots/03-console-results.png)
 
-- **Architecture:** lightweight single-class U-Net ("debris"), 1×1×256×256 input
-- **Export:** `sih-sonar-debris/model/sonar_model_edge.onnx` (+ external weights `.onnx.data`)
-- **Preprocessing:** grayscale (BT.601 weights) → CLAHE (clip 2.0, 8×8 grid) → resize to 256² → normalize
-- **Post-processing:** sigmoid threshold 0.5 → connected components → min-area 15 filter
-- **Confidence:** mean mask probability blended with an aspect/area rule score (mirrors `filter.py`)
-- **Size:** ~74 KB — small enough to load in seconds and run CPU-only on edge hardware
+At the moment, **DEBRIS is a general detection label**, not a claim that the model knows the exact identity of the object. Classification of different anomaly types is part of the planned next stage.
 
-The U-Net is single-class; the human-readable labels (drum / net / pipe / wreck) are
-derived from blob geometry and are **indicative, not identified** — the UI footnotes
-this everywhere.
+---
+
+## How the detection works
+
+The Approach section explains the main problem with sonar: a rock, seabed feature, acoustic shadow and man-made object can sometimes look annoyingly similar.
+
+The prototype approaches this through:
+
+1. **Despeckling** while trying to preserve useful edges.
+2. **Object/shadow geometry** to provide more context than raw brightness.
+3. **Confidence + veto rules** to remove some obvious false positives.
+
+![AQUA AFFINITY detection approach](docs/screenshots/04-approach.png)
+
+---
+
+## Processing pipeline
+
+The current site describes the workflow as five stages:
+
+**Ingest → Condition → Detect → Score & veto → Report**
+
+The idea is to keep the model inside a larger processing pipeline rather than treating one neural-network prediction as unquestionable truth.
+
+![AQUA AFFINITY pipeline](docs/screenshots/05-pipeline.png)
+
+The current browser-facing input is JPG/PNG. Direct XTF ingestion and preservation of raw sonar metadata are planned improvements.
+
+---
+
+## Benchmarks
+
+The site also includes a benchmark section covering:
+
+- Precision
+- Recall
+- Dice
+- IoU
+
+![AQUA AFFINITY benchmarks](docs/screenshots/06-benchmarks.png)
+
+These numbers should only be treated as final model results when they are backed by a reproducible evaluation setup, clearly defined test set, and documented model version. The benchmark UI is there to make the evaluation visible, not to make questionable numbers look impressive.
+
+---
+
+## Why it matters
+
+The final section connects detection to the practical reason for building the system.
+
+Potential applications include:
+
+- locating ghost fishing gear
+- identifying underwater debris
+- helping cleanup crews target specific locations
+- reducing unnecessary seabed disturbance
+- identifying hazards for vessels and marine infrastructure
+
+![AQUA AFFINITY impact section](docs/screenshots/07-impact.png)
+
+---
+
+## Current status
+
+### Working
+
+- JPG/PNG sonar image input
+- browser-based inference workflow
+- anomaly/debris detection
+- confidence threshold
+- detection overlays
+- event/contact display
+- report/export interface
+- demo sonar captures
+
+### Still being developed
+
+- direct XTF ingestion
+- stronger false-positive filtering
+- better geolocation
+- larger labelled sonar datasets
+- multi-class anomaly classification
+- distinguishing natural seabed formations from man-made debris
+- deployment on low-power edge hardware
+
+---
+
+## Tech direction
+
+The prototype is designed around an **ONNX model running locally in the browser**, keeping the inference loop lightweight and avoiding the need to send every uploaded image to a cloud inference endpoint.
+
+The ML side is currently focused on detection/segmentation. The next major ML step is to build a useful labelled dataset for different anomaly classes and train/evaluate the model against that data.
+
+---
+
+## A simple way to think about the project
+
+> **Find the suspicious thing first. Figure out exactly what it is next.**
+
+That is basically where AQUA AFFINITY is right now.
+
+---
+
+## Disclaimer
+
+AQUA AFFINITY is a research/prototype system. Detection results are model predictions and should be verified by an appropriate human or survey operator before being treated as confirmed marine debris or hazards.
+
