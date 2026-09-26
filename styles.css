@@ -7,20 +7,20 @@
 
 :root {
   /* ink & surfaces */
-  --ink: #14323c;
-  --ink-soft: #46606a;
-  --ink-faint: #6d8288;
-  --bg: #eef2ee;
-  --bg-deep: #e5ece6;
-  --panel: rgba(255, 255, 255, 0.85);
-  --panel-strong: rgba(255, 255, 255, 0.94);
+  --ink: #0f172a;
+  --ink-soft: #334155;
+  --ink-faint: #64748b;
+  --bg: #edf4ff;
+  --bg-deep: #dfeaff;
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-strong: rgba(255, 255, 255, 0.95);
 
   /* accents */
-  --teal: #2f6f63;
-  --teal-deep: #22544a;
-  --teal-tint: rgba(47, 111, 99, 0.1);
-  --ocean: #33627a;
-  --ocean-tint: rgba(51, 98, 122, 0.1);
+  --teal: #0f4c81;
+  --teal-deep: #0b3059;
+  --teal-tint: rgba(15, 76, 129, 0.12);
+  --ocean: #1d5a9f;
+  --ocean-tint: rgba(29, 90, 159, 0.12);
   --amber: #b07a2c;
   --warn: #b0413e;
 
