@@ -64,9 +64,6 @@
         </div>
 
         <dl class="hero-strip" aria-label="Headline figures">
-          <div><dt>p95 latency</dt><dd>≈ 38 <span>ms / tile, CPU-only</span></dd></div>
-          <div><dt>FPR on shadow ridges</dt><dd>&lt; 2.1 <span>% after filtering</span></dd></div>
-          <div><dt>Report payload</dt><dd>GeoJSON <span>+ CSV + ping headers</span></dd></div>
         </dl>
       </div>
 
@@ -230,7 +227,7 @@
         <h2>Five stages, one duty cycle</h2>
       </header>
       <ol class="pipe-flow">
-        <li><span class="pipe-i">01</span><h3>Ingest</h3><p>XTF / SDF / tiled PNG log reader; ping headers parsed for lat, lon, range, altitude, towfish attitude.</p></li>
+        <li><span class="pipe-i">01</span><h3>Ingest</h3><p>JPG, PNG file.</p></li>
         <li><span class="pipe-i">02</span><h3>Condition</h3><p>Slant-range correction, TVG gain, despeckle, heave-aware row interpolation for dropouts.</p></li>
         <li><span class="pipe-i">03</span><h3>Detect</h3><p>Quantised YOLO-backbone head on 640&nbsp;px tiles with 15% overlap; INT8 on ARM, FP16 on GPU.</p></li>
         <li><span class="pipe-i">04</span><h3>Score &amp; veto</h3><p>Calibrated confidence + shadow-geometry rule layer strips shadow-band FPs.</p></li>
@@ -256,10 +253,10 @@
         </p>
       </header>
       <div class="numbers-grid">
-        <div class="num-card"><span class="num-big">91.4<i>%</i></span><span class="num-cap">mean precision on debris classes</span></div>
-        <div class="num-card"><span class="num-big">87.2<i>%</i></span><span class="num-cap">recall on partially-buried nets</span></div>
-        <div class="num-card"><span class="num-big">&lt;2.1<i>%</i></span><span class="num-cap">false-positive rate on shadow ridges</span></div>
-        <div class="num-card"><span class="num-big">38<i>ms</i></span><span class="num-cap">p95 latency / 640px tile, CPU INT8</span></div>
+        <div class="num-card"><span class="num-big">32.3<i>%</i></span><span class="num-cap">precision on debris classes</span></div>
+        <div class="num-card"><span class="num-big">98.75<i>%</i></span><span class="num-cap">recall on partially-buried nets</span></div>
+        <div class="num-card"><span class="num-big">41.34<i>%</i></span><span class="num-cap">Dice</span></div>
+        <div class="num-card"><span class="num-big">29.17<i>%</i></span><span class="num-cap">IOU(Intersection over union)</span></div>
       </div>
     </section>
 
@@ -364,7 +361,7 @@
         <p class="hero-kicker">READY WHEN THE FISH IS TOWED</p>
         <h2>Point us at a sonar log.</h2>
         <p>
-          Drop an XTF or a tiled export into the console and walk away with a
+          Drop a PNG or JPG file into the console and walk away with a
           geotagged hazard report before the vessel completes its next line.
         </p>
         <a class="btn btn-solid" href="#console">Back to the console</a>
@@ -376,7 +373,7 @@
   <footer class="site-foot">
     <p>
       <span class="brand-mark" aria-hidden="true"></span>
-      SONARBEAM — marine debris intelligence · demo build · dataset imagery shown
+      Aqua Affinity — marine debris intelligence · demo build · dataset imagery shown
     </p>      <p class="foot-fine">Sonar captures run through the U-Net ONNX model locally in your browser. The model segments debris as one class; contact labels describe blob shape. No cloud. No telemetry. No fish were harmed.</p>
   </footer>
 
