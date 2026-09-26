@@ -1,0 +1,15 @@
+# Core Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Computer Vision & Image Processing
+opencv-python>=4.8.0
+pillow>=9.5.0
+
+# Numerical Computation & Visualization
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+# ONNX Model Export & Edge Deployment
+onnx>=1.14.0
+onnxruntime>=1.15.0

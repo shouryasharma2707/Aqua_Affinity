@@ -215,11 +215,12 @@ async function doScan() {
   let result = null;
   const ready = await Promise.race([
     SonarModel.load(),
-    new Promise((r) => setTimeout(() => r(false), 8000)),
+    // hydration decodes a 32 MB bundle + compiles wasm; give it room
+    new Promise((r) => setTimeout(() => r(false), 30000)),
   ]);
   if (ready) {
     try {
-      result = await SonarModel.infer(el.sonar, gate);
+      result = await SonarModel.infer(el.sonar, gate, state.native);
     } catch (err) {
       log(`MODEL   inference failed — ${String((err && err.message) || err).slice(0, 56)}`, "warn");
     }
@@ -244,7 +245,7 @@ async function doScan() {
 
   if (result.vetoed)
     log(
-      `VETO    ${result.vetoed} candidate${result.vetoed > 1 ? "s" : ""} suppressed by scoring rules`,
+      `VETO    ${result.vetoed} candidate${result.vetoed > 1 ? "s" : ""} below gate / vetoed by scoring rules`,
       "warn",
     );
 
@@ -376,6 +377,15 @@ function loadCaptureImage(src, displayName, revoke, opts = {}) {
     el.sonar.width = SW; el.sonar.height = SH;
     // stretch to fill — the same warp preprocess.py applies when it resizes
     el.sonar.getContext("2d", { willReadFrequently: true }).drawImage(img, 0, 0, SW, SH);
+    // native-aspect copy for inference (matches preprocess.py: CLAHE before resize)
+    if (!state.native) state.native = document.createElement("canvas");
+    const cap = 2048;
+    const sc = Math.min(1, cap / Math.max(img.naturalWidth, img.naturalHeight));
+    state.native.width = Math.max(1, Math.round(img.naturalWidth * sc));
+    state.native.height = Math.max(1, Math.round(img.naturalHeight * sc));
+    state.native
+      .getContext("2d", { willReadFrequently: true })
+      .drawImage(img, 0, 0, state.native.width, state.native.height);
     state.file = displayName;
     el.captureChips.forEach((c) => c.classList.toggle("is-on", c.dataset.name === displayName));
     el.vpTag.textContent = `${displayName} · 900 kHz`;
@@ -439,21 +449,21 @@ function boot() {
   el.exportCsv.addEventListener("click", exportCSV);
 
   // boot: model first, then load the default capture so the first sweep is real
-  log("BOOT    sonarbeam core v0.9.2 · WASM runtime ready", "ok");
+  log("BOOT    sonarbeam core v1.0 · embedded WASM runtime + U-Net (8.1 MB bundle)", "ok");
   const first = el.captureChips[0];
   if (typeof SonarModel !== "undefined") {
-    log("BOOT    fetching sonar_model_edge.onnx (U-Net · 74 KB)…");
+    log("MODEL   hydrating ONNX runtime + sonar_model_edge.onnx…");
     SonarModel.load().then((ok) => {
       if (ok) {
-        log("MODEL   sonar_model_edge.onnx ready · WASM EP", "ok");
+        log("MODEL   U-Net ready · 256×256 · WASM EP · all in-browser", "ok");
       } else {
-        log(`MODEL   unavailable — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
+        log(`MODEL   load failed — ${String(SonarModel.error || "").slice(0, 48)}`, "warn");
       }
       if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false, { focus: false });
     });
   } else {
     // no model.js / ORT runtime — still show the capture so the console reads live
-    log("MODEL   ONNX runtime not present — display-only sweep", "warn");
+    log("MODEL   runtime not present — display-only sweep", "warn");
     if (first) loadCaptureImage(first.dataset.real, first.dataset.name, false, { focus: false });
   }
 

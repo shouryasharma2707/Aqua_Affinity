@@ -1,0 +1,32 @@
+# --- Python virtualenv (created in-place at repo root) ---
+/venv/
+/.venv/
+/Include/
+/Lib/
+/Scripts/
+/include/
+/lib/
+/scripts/
+/share/
+/pyvenv.cfg
+
+# --- Python artifacts ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Workspace / editor state ---
+.freebuff/
+
+# --- Local archives ---
+sih-sonar-debris.zip
+
+# --- Derived data (regenerate with preprocessing/preprocess.py) ---
+sih-sonar-debris/sih-sonar-debris/data/processed/
+
+# --- OS cruft ---
+Thumbs.db
+.DS_Store
+
+# --- neutralized nested git dir from the zip extraction ---
+sih-sonar-debris/sih-sonar-debris/.git.embedded.bak/
