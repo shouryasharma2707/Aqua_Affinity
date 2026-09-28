@@ -42,6 +42,17 @@
       <a href="#impact">Impact</a>
     </nav>
     <a class="head-cta" href="#console">Open the console</a>
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="mobile-nav" id="mobileNav" aria-label="Mobile">
+      <a href="#console">Console</a>
+      <a href="#approach">Approach</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#numbers">Benchmarks</a>
+      <a href="#impact">Impact</a>
+      <a class="mobile-cta" href="#console">Open the console</a>
+    </nav>
   </header>
 
   <main id="top">
@@ -98,7 +109,7 @@
               <input id="uploadInput" type="file" accept="image/*" hidden />
               <button id="rescanBtn" class="btn btn-ghost" type="button">Re-run inference</button>
             </div>
-            <p class="upload-hint">JPG / PNG · drag it straight onto the scan · runs entirely in this browser</p>
+            <p class="upload-hint">JPG / PNG · tap to upload, or pick a dataset capture · runs entirely in this browser</p>
           </div>
 
           <div class="panel console-panel console-panel-tuning">

@@ -175,6 +175,28 @@ button { font: inherit; cursor: pointer; }
   color: #f4faf7; text-decoration: none;
 }
 
+/* hamburger — mobile nav trigger (invisible on desktop) */
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  width: 42px; height: 38px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(47, 111, 99, 0.45);
+  border-radius: 10px;
+}
+.nav-toggle span {
+  width: 18px; height: 2px; border-radius: 2px;
+  background: var(--teal-deep);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.2s;
+}
+body.nav-open .nav-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.mobile-nav { display: none; }
+
 /*  buttons  */
 
 .btn {
@@ -281,6 +303,9 @@ section { padding: clamp(72px, 10vw, 120px) var(--pad); }
 
 .hero-strip dd { font-family: var(--mono); font-size: 20px; color: var(--ink); }
 .hero-strip dd span { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 3px; }
+
+/* the strip ships empty in this build — hide the stray sliver until figures exist */
+.hero-strip:not(:has(*)) { display: none; }
 
 .hero-status {
   position: absolute; left: var(--pad); bottom: 26px;
@@ -827,9 +852,18 @@ input[type="range"]::-moz-range-progress {
 @media (max-width: 1020px) {
   .console-main { grid-template-columns: 1fr; }
   .console-side { order: 2; }
+
+  /* compact header: brand + nav + CTA stay on one line through tablet widths */
+  .site-head { padding: 12px 20px; gap: 16px; }
+  .site-nav { gap: 16px; }
+  .site-nav a { font-size: 11px; letter-spacing: 0.1em; }
+  .brand { font-size: 13px; letter-spacing: 0.16em; }
+  .head-cta { font-size: 11px; padding: 8px 12px; }
 }
 
 @media (max-width: 900px) {
+  /* the full CTA no longer fits beside the nav — it lives in the mobile menu */
+  .head-cta { display: none; }
   .console-top { grid-template-columns: 1fr; }
   .impact-grid { grid-template-columns: 1fr; }
   .impact-eco { grid-row: auto; }
@@ -851,7 +885,6 @@ input[type="range"]::-moz-range-progress {
 }
 
 @media (max-width: 860px) {
-  .site-nav { display: none; }
   .approach-grid { grid-template-columns: 1fr; max-width: 560px; }
   .numbers-grid { grid-template-columns: repeat(2, 1fr); }
   .hero-strip { grid-template-columns: 1fr; width: 100%; }
@@ -860,13 +893,62 @@ input[type="range"]::-moz-range-progress {
   .hero { min-height: auto; }
 }
 
+/* phones — hamburger menu replaces the inline nav */
+@media (max-width: 720px) {
+  .site-nav { display: none; }
+  .nav-toggle { display: inline-flex; }
+
+  body.nav-open .mobile-nav {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 12px; right: 12px;
+    z-index: 70;
+    padding: 10px;
+    background: var(--panel-strong);
+    -webkit-backdrop-filter: var(--acrylic-blur);
+    backdrop-filter: var(--acrylic-blur);
+    border: 1px solid rgba(20, 50, 60, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px -20px rgba(15, 43, 51, 0.4);
+    animation: nav-drop 0.18s ease;
+  }
+  .mobile-nav a {
+    font-family: var(--mono); font-size: 13px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 14px; border-radius: 10px;
+  }
+  .mobile-nav a:hover { text-decoration: none; background: var(--teal-tint); color: var(--teal-deep); }
+  .mobile-nav .mobile-cta {
+    margin-top: 6px; text-align: center;
+    border: 1px solid rgba(47, 111, 99, 0.45);
+    color: var(--teal-deep);
+    background: rgba(255, 255, 255, 0.6);
+  }
+}
+
+@keyframes nav-drop {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (max-width: 620px) {
+  section { padding: 56px var(--pad); }
   .console-shell { grid-template-columns: 1fr; }
   .pipe-flow { grid-template-columns: 1fr; }
-  .pipe-flow li { border-left: 0; }
+  .pipe-flow li { border-left: 0; border-top: 1px solid var(--line-soft); }
+  .pipe-flow li:first-child { border-top: 0; }
   .numbers-grid { grid-template-columns: 1fr; }
-  .head-cta { display: none; }
   .btn-grid { grid-template-columns: 1fr 1fr; }
+  .chip { padding: 11px 6px; }
+  /* fixed height instead of min-height: min-height transfers through aspect-ratio
+     and blows the viewport out to ~467px wide inside a ~310px column */
+  .viewport { height: clamp(260px, 76vw, 340px); aspect-ratio: auto; }
+  .score-val { font-size: 38px; }
+  .event-log { height: 190px; }
+  .legend { gap: 12px; }
   .export-row { width: 100%; }
   .export-row .btn { flex: 1; }
 }

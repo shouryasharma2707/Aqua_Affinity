@@ -147,6 +147,41 @@ function initScrollSpy() {
   update();
 }
 
+/* hamburger menu — small-screen navigation only */
+
+function initMobileNav() {
+  const toggle = document.querySelector(".nav-toggle");
+  const menu = document.querySelector(".mobile-nav");
+  if (!toggle || !menu) return;
+
+  const setOpen = (open) => {
+    document.body.classList.toggle("nav-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+
+  toggle.addEventListener("click", () =>
+    setOpen(!document.body.classList.contains("nav-open"))
+  );
+  menu.addEventListener("click", (e) => {
+    if (e.target.closest("a")) setOpen(false); // close after picking a section
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setOpen(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (
+      document.body.classList.contains("nav-open") &&
+      !e.target.closest(".mobile-nav") &&
+      !e.target.closest(".nav-toggle")
+    )
+      setOpen(false);
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 720) setOpen(false);
+  });
+}
+
 /* auto-center the sonar viewer after a new capture loads */
 
 function focusViewport() {
@@ -405,6 +440,7 @@ function loadCaptureImage(src, displayName, revoke, opts = {}) {
 
 function boot() {
   initScrollSpy();
+  initMobileNav();
   updateSliderFill(el.confSlider);
 
   el.confSlider.addEventListener("input", () => {
